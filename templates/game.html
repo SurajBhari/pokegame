@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokémon Judgment</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+:root {
+    --gradient-color: 255,255,255;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(var(--gradient-color),0.25), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(var(--gradient-color),0.15), transparent 40%),
+        #000;
+    animation: floatBg 30s ease-in-out infinite alternate;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+@keyframes floatBg {
+    0% { background-position: 0% 0%, 100% 100%; }
+    100% { background-position: 100% 50%, 0% 50%; }
+}
+
+.container {
+    padding: 30px;
+    text-align: center;
+}
+
+#result-area {
+    height: 46px;
+    font-size: 1.6rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#streak {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin-bottom: 12px;
+}
+
+.scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-size: 1.2rem;
+    margin-bottom: 25px;
+}
+
+.game-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+.player-card {
+    width: 320px;
+    padding: 20px;
+    border-radius: 22px;
+    background: rgba(255,255,255,0.08);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+}
+
+.name {
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.type {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.9rem;
+}
+
+.art img {
+    max-height: 140px;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+}
+
+.meta {
+    display: flex;
+    justify-content: space-between;
+    margin: 12px 0;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 12px;
+}
+
+.stat {
+    position: relative;
+    background: rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 10px;
+    overflow: hidden;
+}
+
+.stat::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(4px);
+    transition: opacity 0.4s ease;
+}
+
+.stat.reveal::after {
+    opacity: 0;
+}
+
+.vs {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.controls {
+    margin-top: 25px;
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+    max-width: 700px;
+    margin-inline: auto;
+}
+
+.controls button {
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 1rem;
+}
+
+.controls button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+#restart-btn {
+    display: none;
+    margin-top: 18px;
+    padding: 12px 26px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
+
+.shake {
+    animation: shake 0.35s ease;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div id="result-area">Choose your attack</div>
+<div id="streak">Streak: 0</div>
+
+<div class="scoreboard">
+    <div>Score: <strong id="player-score">0</strong></div>
+    <div>Strikes: <strong id="cpu-score">0</strong></div>
+</div>
+
+<div class="game-area">
+
+<div class="player-card" id="player-card">
+    <div id="player-name" class="name"></div>
+    <div class="type">
+        <i id="player-type-icon"></i>
+        <span id="player-type-text"></span>
+    </div>
+    <div class="art"><img id="player-art-img"></div>
+    <div class="meta">
+        <div>Lv <strong id="player-level"></strong></div>
+        <div>#<strong id="player-id"></strong></div>
+    </div>
+    <div class="stats">
+        <div class="stat">⚔ <strong id="player-attack"></strong></div>
+        <div class="stat">🛡 <strong id="player-defense"></strong></div>
+        <div class="stat">💨 <strong id="player-speed"></strong></div>
+        <div class="stat">✨ <strong id="player-type"></strong></div>
+    </div>
+</div>
+
+<div class="vs">VS</div>
+
+<div class="player-card">
+    <div id="cpu-name" class="name"></div>
+    <div class="type">
+        <i id="cpu-type-icon"></i>
+        <span id="cpu-type-text"></span>
+    </div>
+    <div class="art"><img id="cpu-art-img"></div>
+    <div class="meta">
+        <div>Lv <strong id="cpu-level"></strong></div>
+        <div>#<strong id="cpu-id"></strong></div>
+    </div>
+    <div class="stats">
+        <div class="stat">⚔ <strong id="cpu-attack"></strong></div>
+        <div class="stat">🛡 <strong id="cpu-defense"></strong></div>
+        <div class="stat">💨 <strong id="cpu-speed"></strong></div>
+        <div class="stat">✨ <strong id="cpu-type"></strong></div>
+    </div>
+</div>
+
+</div>
+
+<div class="controls">
+    <button onclick="playerMove('attack')">Attack</button>
+    <button onclick="playerMove('defense')">Defense</button>
+    <button onclick="playerMove('speed')">Speed</button>
+    <button onclick="playerMove('hp')">HP</button>
+</div>
+
+<button id="restart-btn" onclick="restartGame()">Restart</button>
+
+</div>
+
+<script>
+let player, cpu;
+let score = { player: 0, cpu: 0 };
+let streak = 0;
+
+const resultArea = document.getElementById('result-area');
+const streakUI = document.getElementById('streak');
+const controls = document.querySelectorAll('.controls button');
+
+function setControls(v){ controls.forEach(b=>b.disabled=!v); }
+
+function setGradient(type){
+    const c={
+        attack:'255,80,80',
+        defense:'80,120,255',
+        speed:'80,255,120',
+        hp:'255,255,120'
+    };
+    document.documentElement.style.setProperty('--gradient-color',c[type]||'255,255,255');
+}
+
+function playSound(type){
+    new Audio(`/sounds/${type}.mp3`).play();
+}
+
+function hideStats(){
+    document.querySelectorAll('.stat').forEach(s=>s.classList.remove('reveal'));
+}
+function revealStats(){
+    document.querySelectorAll('.stat').forEach(s=>s.classList.add('reveal'));
+}
+
+const playerScoreEl = document.getElementById('player-score');
+const cpuScoreEl = document.getElementById('cpu-score');
+
+function updateScore() {
+    playerScoreEl.textContent = score.player;
+    cpuScoreEl.textContent = score.cpu;
+}
+
+function populate(prefix,p){
+    document.getElementById(`${prefix}-name`).textContent=p.name;
+    document.getElementById(`${prefix}-type-text`).textContent=p.type;
+    document.getElementById(`${prefix}-type`).textContent=p.type;
+    document.getElementById(`${prefix}-level`).textContent=p.level;
+    document.getElementById(`${prefix}-id`).textContent=p.id;
+    document.getElementById(`${prefix}-attack`).textContent=p.attack;
+    document.getElementById(`${prefix}-defense`).textContent=p.defense;
+    document.getElementById(`${prefix}-speed`).textContent=p.speed;
+    document.getElementById(`${prefix}-type-icon`).className={
+        Fire:'bi bi-fire',Water:'bi bi-droplet',Grass:'bi bi-leaf',Electric:'bi bi-lightning-charge'
+    }[p.type]||'';
+    document.getElementById(`${prefix}-art-img`).src=
+        `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${p.id}.png`;
+}
+
+function playerMove(type){
+    setControls(false);
+    setGradient(type);
+    playSound(type);
+
+    fetch(`/combat/${player.id}/${cpu.id}/${type}`)
+    .then(r=>r.json())
+    .then(res=>{
+        revealStats();
+
+        if(res.winner_id===player.id){
+            streak++;
+            score.player++;
+            streakUI.textContent=`Streak: ${streak}`;
+            resultArea.textContent= streak>=3 ? `🔥 ${streak} Streak!` : 'You Win!';
+            setTimeout(()=>{ getCards(); setControls(true); },900);
+        }else{
+            streak=0;
+            score.cpu++;
+            streakUI.textContent='Streak: 0';
+            resultArea.textContent='Game Over 💀';
+            document.getElementById('player-card').classList.add('shake');
+            setTimeout(()=>document.getElementById('player-card').classList.remove('shake'),400);
+            document.getElementById('restart-btn').style.display='block';
+        }
+        updateScore();
+    });
+}
+
+function restartGame(){
+    score={player:0,cpu:0};
+    streak=0;
+    updateScore();
+    streakUI.textContent='Streak: 0';
+    resultArea.textContent='Choose your attack';
+    document.getElementById('restart-btn').style.display='none';
+    getCards();
+    setControls(true);
+}
+
+function getCards(){
+    fetch('/get_random_pokemon').then(r=>r.json()).then(p1=>{
+        fetch('/get_random_pokemon').then(r=>r.json()).then(p2=>{
+            player=p1; cpu=p2;
+            populate('player',p1);
+            populate('cpu',p2);
+            hideStats();
+        });
+    });
+}
+
+getCards();
+setControls(true);
+</script>
+</body>
+</html>
